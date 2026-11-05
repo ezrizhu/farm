@@ -1,0 +1,29 @@
+# Applied once by hand at bootstrap (see ../readme.md), then reconciled from git
+# like everything else in this directory.
+#
+# The sync block makes the operator generate the GitRepository and Kustomization
+# named "flux-system" that pull this directory -- that pair is the entrypoint,
+# the equivalent of the old argocd app-of-apps.
+apiVersion: fluxcd.controlplane.io/v1
+kind: FluxInstance
+metadata:
+  name: flux
+  namespace: flux-system
+spec:
+  distribution:
+    version: "2.8.x"
+    registry: "ghcr.io/fluxcd"
+  components:
+    - source-controller
+    - kustomize-controller
+    - helm-controller
+    - notification-controller
+  cluster:
+    type: kubernetes
+    networkPolicy: true
+  sync:
+    kind: GitRepository
+    url: "ssh://git@github.com/ezrizhu/farm.git"
+    ref: "refs/heads/main"
+    path: "apps-infra"
+    pullSecret: "flux-system"

@@ -1,0 +1,14 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cilium-ip
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 10s
+  path: ./manifests-infra/cilium
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

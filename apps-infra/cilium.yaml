@@ -1,0 +1,74 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cilium
+  namespace: flux-system
+spec:
+  interval: 10m
+  releaseName: cilium
+  targetNamespace: kube-system
+  storageNamespace: kube-system
+  chart:
+    spec:
+      chart: cilium
+      version: 1.18.0
+      sourceRef:
+        kind: HelmRepository
+        name: cilium
+        namespace: flux-system
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  driftDetection:
+    mode: enabled
+    ignore:
+      # the ingress LB service ports are managed by cilium itself
+      - paths:
+          - /spec/ports
+        target:
+          kind: Service
+          name: cilium-ingress
+  values:
+    ipam:
+      mode: kubernetes
+    kubeProxyReplacement: true
+    ingressController:
+      enabled: true
+      loadbalancerMode: shared
+      service:
+        loadBalancerIP: "192.168.2.100"
+    operator:
+      replicas: 1
+    l2announcements:
+      enabled: true
+    bgpControlPlane:
+      enabled: false
+    securityContext:
+      capabilities:
+        ciliumAgent:
+          - CHOWN
+          - KILL
+          - NET_ADMIN
+          - NET_RAW
+          - IPC_LOCK
+          - SYS_ADMIN
+          - SYS_RESOURCE
+          - DAC_OVERRIDE
+          - FOWNER
+          - SETGID
+          - SETUID
+        cleanCiliumState:
+          - NET_ADMIN
+          - SYS_ADMIN
+          - SYS_RESOURCE
+    cgroup:
+      autoMount:
+        enabled: false
+      hostRoot: /sys/fs/cgroup
+    k8sServiceHost: localhost
+    k8sServicePort: 7445
